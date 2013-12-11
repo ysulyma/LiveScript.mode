@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<syntax>
+  <head>
+    <name>LiveScript</name>
+    <charsintokens><![CDATA[-_0987654321abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@$]]></charsintokens>
+    <!--ZEROWIDTHS Issue:
+    It seems that zero-width lookaheads/lookbehinds cannot be used as state end symbols
+    n Coda 2 (I don't know about SEE itself). As a workaround, I've required padding with
+    a whitespace character. Looking for a better solution.
+    
+    Look for the 'ZEROWIDTHS' tag throughout this document to see where this issue occurs.
+    -->
+  </head>
+  <states>
+    <default id="Base">
+      <keywords id="Globals, constants and aliases" scope="constant.numeric.keyword" useforautocomplete="yes">
+        <string>true</string>
+        <string>yes</string>
+        <string>on</string>
+        <string>false</string>
+        <string>no</string>
+        <string>off</string>
+        
+        <string>null</string>
+        <string>undefined</string>
+      </keywords>
+      
+      <keywords id="Keywords" scope="keyword" useforautocomplete="yes">
+        <!-- Feel free to add -->
+        <string>arguments</string>
+        <string>process</string>
+        <string>console</string>
+        <string>window</string>
+        <string>document</string>
+        <string>$</string>
+      </keywords>
+      
+      <keywords id="Control Keywords" scope="keyword.control" useforautocomplete="yes">
+        <string>if</string>
+        <string>unless</string>
+        <string>else</string>
+        <string>switch</string>
+        <string>when</string>
+        <string>then</string>
+        
+        <string>var</string>
+        <string>const</string>
+        <string>let</string>
+        <string>class</string>
+        <string>extends</string>
+        
+        <string>for</string>
+        <string>in</string>
+        <string>of</string>
+        <string>from</string>
+        <string>to</string>
+        <string>til</string>
+        <string>while</string>
+        <string>until</string>
+        <string>do</string>
+        
+        <string>break</string>
+        <string>continue</string>
+        <string>return</string>
+        
+        <string>try</string>
+        <string>catch</string>
+        <string>finally</string>
+        <string>throw</string>
+        
+        <string>new</string>
+      </keywords>
+      
+      <state id="Lists of words" scope="language.operator">
+        <begin><regex>\&lt;\[</regex></begin>
+        <end><regex>\]\&gt;</regex></end>
+      </state>
+      
+      <keywords id="Operators" useforautocomplete="yes" scope="language.operator">
+        <string>import</string>
+        <string>import all</string>
+        <string>is</string>
+        <string>with</string>
+        <string>isnt</string>
+        <string>not</string>
+        <string>and</string>
+        <string>or</string>
+        <string>|</string>
+        <regex>([:\+\.\-\*\/\=\!\?&amp;\|\&lt;\&gt;\%\[\],])</regex>
+      </keywords>
+      
+      <keywords id="Variables">
+        <regex>((?!\d)\w[\w-]*)</regex>
+      </keywords>
+      
+     <keywords id="Special variables" scope="language.variable">
+        <regex>((?!\d)(?:\$|\w[\w-]*\$)[\w$-]*)</regex>
+      </keywords>
+      
+      <keywords id="Class variables" scope="language.variable.class">
+        <regex>(@(?:[\w$][\w$-]*)?)</regex>
+      </keywords>
+      
+      <keywords id="Numbers" scope="constant.numeric" casesensitive="no" useforautocomplete="yes">
+        <string>NaN</string>
+        <string>infinity</string>
+        <regex>([+-]?\d+[\w$-]*)</regex>
+      </keywords>
+
+     <keywords id="Function calls" useforautocomplete="no" scope="language.function.call">
+        <regex>(?xi)
+          ([$a-z_][$\w\[\]-]*)   (?# capture the function)
+          (?:
+            \??!
+          |
+            [\ \t]+
+            (?!=|is|isnt|if|then|else|unless|with|of|in|from|to|when|and|or|xor|[\#!=:\.+\|]|&lt;|&gt;|-\s|$\n)
+          )
+        </regex>
+     </keywords>
+      
+      <keywords id="Function definition" scope="language.function">
+        <regex>!?((?:-?-|~?~)>)</regex>
+        <regex>!?function</regex>
+      </keywords>
+      
+      <state id="Hoisted function definition" scope="language.function">
+        <begin>
+          <regex>!?function</regex>
+        </begin>
+        <end>
+          <regex>\n|\s+(?=then)</regex>
+        </end>
+      </state>
+      
+      <state id="Function definition" scope="language.function">
+        <begin>
+          <regex>\((?=[^\n\)]*?\)\s*!?(?:-?-|~?~)>)</regex>
+        </begin>
+        <end>
+          <regex>\)\s*!?(?:-?-|~?~)></regex>
+        </end>
+
+        <keywords id="Function argument" scope="language.function.argument">
+          <regex>[\(,]\s*(\w+)\s*(?=[=,\)])</regex>
+        </keywords>
+
+        <!--ZEROWIDTHS issue (see above): Requiring whitespace padding at the end for now.-->
+        <state id="Function argument defaults" type="block" scope="meta.block">
+          <begin><string>=</string></begin>
+          <end><regex>\s(?=[,\)])</regex></end>
+          <import />
+        </state>
+      </state>
+      
+      <keywords id="Properties" scope="language.property">
+        <regex>([$\w][$\w-]*(\s+)?):</regex>
+      </keywords>
+      
+      <state id="Comment" type="comment" foldable="yes" scope="comment.block.js">
+          <begin><regex>/\*</regex><autoend>\*/</autoend></begin>
+          <end><regex>\*/</regex></end>
+          <import mode="Base" state="EmailAndURLContainerState" keywords-only="yes"/>
+      </state>
+      
+      <state id="Single Comment" scope="markup.comment" usespellchecking="yes">
+        <begin><regex>#</regex></begin>
+        <end><regex>[\n\r]</regex></end>
+      </state>
+      
+      <state id="String" scope="string" usespellchecking="yes">
+        <begin><regex>"</regex></begin>
+        <end><regex>(((?&lt;!\\)(\\\\)*)|^)"</regex></end>
+        
+        <state id="Interpolation" scope="string.interpolation">
+          <begin><regex>#(?={)</regex></begin>
+          <end><regex>}</regex></end>
+        
+          <!--ZEROWIDTHS issue (see above): Requiring full whitespace padding for now. -->
+          <state id="Interpolation code" type="block" foldable="yes">
+            <begin><regex>(?&lt;={)\s</regex></begin>
+            <end><regex>\s(?=})</regex></end>
+            <import />
+          </state>
+        </state>
+      </state>
+      
+      <state id="Single String" scope="string" usespellchecking="yes">
+        <begin><regex>'</regex></begin>
+        <end><regex>(((?&lt;!\\)(\\\\)*)|^)'</regex></end>
+      </state>
+      
+      <state id="Backslash String" scope="string" usespellchecking="yes">
+        <begin><regex>\\</regex></begin>
+        <end><regex>.(?=[,\s\[\])\}])</regex></end>
+      </state>
+      
+      <state id="Regular expression" scope="string.regex">
+        <begin><regex>(?i)/(?=[^\n]+/)</regex></begin>
+        <end><regex>(?&lt;!\\)/[cgimosx]*</regex></end>
+      </state>
+      
+      <state id="Block Regular Expression" scope="string.regex">
+        <begin><regex>(?i)//(?![/*+{}?])</regex></begin>
+        <end><regex>//[cgimosx]*</regex></end>
+
+        <state id="Comments" type="comment" scope="comment">
+          <begin><regex>#</regex></begin>
+          <end><regex>[\n\r]</regex></end>
+        </state>
+        
+        <keywords scope="language.operator">
+          <string>^</string>
+          <string>$</string>
+          <string>?</string>
+          <string>+</string>
+          <string>*</string>
+        </keywords>
+      </state>
+      
+      <state id="Embedded JavaScript" type="block" foldable="yes" indent="yes" scope="meta.block">
+        <begin><regex>``</regex><autoend>``</autoend></begin>
+        <end><regex>``</regex></end>
+        <import mode="JavaScript" />
+      </state>
+     
+      <keywords id="Constants" useforautocomplete="no" scope="constant">
+        <regex>\b([_A-Z]+)\b</regex>
+      </keywords>
+    </default>
+  </states>
+</syntax>
